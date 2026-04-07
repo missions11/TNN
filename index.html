@@ -139,12 +139,11 @@ Tên
 
 </div>
 
-<!-- popup -->
 
 <div id="notifyBox">
 <div class="popup">
 
-<div id="notifyText">Đang lưu dữ liệu...</div>
+<div id="notifyText">Đang tải dữ liệu...</div>
 
 <div style="margin-top:10px;font-size:40px">
 ⏳ <span id="countdown">10</span>
@@ -152,6 +151,7 @@ Tên
 
 </div>
 </div>
+
 
 <script>
 
@@ -187,6 +187,8 @@ function findPlayer(name){
 return players.find(p=>p.name.toLowerCase()==name.toLowerCase())
 }
 
+/* popup */
+
 function showNotify(message){
 
 const box=document.getElementById("notifyBox")
@@ -216,6 +218,12 @@ box.style.display="none"
 
 }
 
+function hideNotify(){
+document.getElementById("notifyBox").style.display="none"
+}
+
+/* load drive */
+
 async function loadDrive(){
 
 try{
@@ -233,6 +241,8 @@ driveReady=true
 
 render()
 
+hideNotify()
+
 }
 
 }catch(e){
@@ -244,11 +254,15 @@ if(backup){
 players=JSON.parse(backup)
 render()
 
-}
+hideNotify()
 
 }
 
 }
+
+}
+
+/* save drive */
 
 async function saveDrive(){
 
@@ -284,6 +298,8 @@ alert("Lỗi lưu dữ liệu")
 saving=false
 
 }
+
+/* add */
 
 function addPlayer(){
 
@@ -321,10 +337,11 @@ players.push(p)
 p.score=calcScore(p)
 
 render()
-
 saveDrive()
 
 }
+
+/* edit */
 
 function editPlayer(i){
 
@@ -347,10 +364,11 @@ if(v6!==null)p.map=+v6
 p.score=calcScore(p)
 
 render()
-
 saveDrive()
 
 }
+
+/* delete */
 
 function deletePlayer(i){
 
@@ -366,10 +384,11 @@ return
 players.splice(i,1)
 
 render()
-
 saveDrive()
 
 }
+
+/* render */
 
 function render(){
 
@@ -413,6 +432,9 @@ listEl.innerHTML=html
 
 }
 
+/* start */
+
+showNotify("Đang tải dữ liệu...")
 loadDrive()
 
 setInterval(loadDrive,5000)
