@@ -8,15 +8,13 @@
 
 body{
 margin:0;
-font-family:'Times New Roman',serif;
+font-family:Arial;
 background:linear-gradient(135deg,#a8edea,#fed6e3);
-overflow-x:hidden;
 }
 
 h1{
 text-align:center;
 padding:20px;
-font-size:40px;
 color:#ff2e63;
 }
 
@@ -46,7 +44,7 @@ button{
 padding:8px 12px;
 border-radius:8px;
 border:none;
-margin:2px;
+margin:3px;
 cursor:pointer;
 }
 
@@ -57,21 +55,21 @@ cursor:pointer;
 .player{
 display:flex;
 align-items:center;
-padding:12px;
-border-radius:15px;
-margin-bottom:10px;
+padding:10px;
+border-radius:12px;
+margin-bottom:8px;
 background:#f9f9f9;
 }
 
-.rank{width:50px;font-weight:bold;}
+.rank{width:40px;font-weight:bold;}
 .name{flex:1;}
 .icons{flex:2;}
-.score{width:80px;text-align:right;font-weight:bold;}
-.actions{width:120px;text-align:right;}
+.score{width:80px;text-align:right;}
+.actions{width:110px;text-align:right;}
 
-.top1{background:linear-gradient(45deg,gold,orange);}
-.top2{background:linear-gradient(45deg,silver,#ddd);}
-.top3{background:linear-gradient(45deg,#cd7f32,#e0a96d);}
+.top1{background:linear-gradient(45deg,gold,orange)}
+.top2{background:linear-gradient(45deg,silver,#ddd)}
+.top3{background:linear-gradient(45deg,#cd7f32,#e0a96d)}
 
 </style>
 </head>
@@ -84,7 +82,7 @@ background:#f9f9f9;
 
 <div class="card">
 
-Tên:
+Tên
 <input id="name">
 
 🌿 <input type="number" id="leaf" value="0">
@@ -96,7 +94,11 @@ Tên:
 
 <br><br>
 
-<button class="addBtn" onclick="addPlayer()">➕ Thêm / Cộng dồn</button>
+<button class="addBtn" onclick="addPlayer()">➕ Thêm</button>
+<button onclick="saveDrive()">💾 Lưu Drive</button>
+<button onclick="backup()">📥 Backup JSON</button>
+
+<div id="status"></div>
 
 </div>
 
@@ -109,70 +111,63 @@ Tên:
 const PASSWORD="111111"
 
 /* DÁN LINK GOOGLE SCRIPT Ở ĐÂY */
-const API_URL="PASTE_GOOGLE_SCRIPT_URL_HERE"
+
+const API_URL="https://script.google.com/macros/s/AKfycby6UviLXwOXBUCGFlEhEZVSwK4W7h9zEaVG0o4D4yWIapDv3CF4nMp39KOseqI6jePg3w/exec"
 
 let players=[]
-let lastTop1=null
-
-const listEl=document.getElementById("list")
 
 function loadLocal(){
+
 try{
 players=JSON.parse(localStorage.getItem("players")||"[]")
 }catch{
 players=[]
 }
+
 }
 
 function saveLocal(){
+
 localStorage.setItem("players",JSON.stringify(players))
+
 }
 
 function calcScore(p){
-return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5
-}
 
-function num(v){
-v=parseInt(v)
-return isNaN(v)||v<0?0:v
+return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5
+
 }
 
 function icons(p){
 
-function limit(icon,count){
-count=Math.min(count,15)
-return icon.repeat(count)
-}
-
-return limit("🌿",p.leaf)+
-limit("🌸",p.flower)+
-limit("🍇",p.fruit)+
-limit("🌳",p.tree)+
-limit("📖",p.book)+
-limit("🗺️",p.map)
+return "🌿".repeat(p.leaf)
++"🌸".repeat(p.flower)
++"🍇".repeat(p.fruit)
++"🌳".repeat(p.tree)
++"📖".repeat(p.book)
++"🗺️".repeat(p.map)
 
 }
 
 function findPlayer(name){
-return players.find(p=>p.name.toLowerCase()===name.toLowerCase())
+
+return players.find(p=>p.name.toLowerCase()==name.toLowerCase())
+
 }
 
 function addPlayer(){
 
-const name=document.getElementById("name").value.trim()
+let name=document.getElementById("name").value.trim()
 
-if(!name){
-alert("Nhập tên")
-return
-}
+if(!name)return
 
-const data={
-leaf:num(leaf.value),
-flower:num(flower.value),
-fruit:num(fruit.value),
-tree:num(tree.value),
-book:num(book.value),
-map:num(map.value)
+let data={
+leaf:+leaf.value||0,
+flower:+flower.value||0,
+fruit:+fruit.value||0,
+tree:+tree.value||0,
+book:+book.value||0,
+map:+map.value||0
 }
 
 let p=findPlayer(name)
@@ -196,7 +191,6 @@ players.push(p)
 p.score=calcScore(p)
 
 saveLocal()
-saveToDrive()
 render()
 
 }
@@ -205,31 +199,23 @@ function editPlayer(i){
 
 let p=players[i]
 
-let v1=prompt("🌿",p.leaf)
-let v2=prompt("🌸",p.flower)
-let v3=prompt("🍇",p.fruit)
-let v4=prompt("🌳",p.tree)
-let v5=prompt("📖",p.book)
-let v6=prompt("🗺️",p.map)
-
-if(v1!==null)p.leaf=num(v1)
-if(v2!==null)p.flower=num(v2)
-if(v3!==null)p.fruit=num(v3)
-if(v4!==null)p.tree=num(v4)
-if(v5!==null)p.book=num(v5)
-if(v6!==null)p.map=num(v6)
+p.leaf=+prompt("🌿",p.leaf)
+p.flower=+prompt("🌸",p.flower)
+p.fruit=+prompt("🍇",p.fruit)
+p.tree=+prompt("🌳",p.tree)
+p.book=+prompt("📖",p.book)
+p.map=+prompt("🗺️",p.map)
 
 p.score=calcScore(p)
 
 saveLocal()
-saveToDrive()
 render()
 
 }
 
 function deletePlayer(i){
 
-let pass=prompt("Nhập mật khẩu để xoá")
+let pass=prompt("Nhập mật khẩu xoá")
 
 if(pass!==PASSWORD){
 alert("Sai mật khẩu")
@@ -239,7 +225,6 @@ return
 players.splice(i,1)
 
 saveLocal()
-saveToDrive()
 render()
 
 }
@@ -259,72 +244,84 @@ let cls=i==0?"top1":i==1?"top2":i==2?"top3":""
 html+=`
 <div class="player ${cls}">
 <div class="rank">#${i+1}</div>
-
 <div class="name">${p.name}</div>
-
 <div class="icons">${icons(p)}</div>
-
 <div class="score">${p.score}</div>
-
 <div class="actions">
 <button class="editBtn" onclick="editPlayer(${i})">✏️</button>
 <button class="deleteBtn" onclick="deletePlayer(${i})">❌</button>
 </div>
-
 </div>
 `
 
 })
 
-listEl.innerHTML=html
+list.innerHTML=html
 
 }
 
-/* GOOGLE DRIVE SAVE */
+async function saveDrive(){
 
-async function saveToDrive(){
+let status=document.getElementById("status")
 
-if(API_URL==="PASTE_GOOGLE_SCRIPT_URL_HERE") return
+status.innerHTML="⏳ Đang lưu..."
+
+try{
 
 await fetch(API_URL,{
 method:"POST",
 body:JSON.stringify(players)
 })
 
+status.innerHTML="✅ Đã lưu Drive"
+
+}catch{
+
+status.innerHTML="❌ Lỗi lưu"
+
 }
 
-/* LOAD DRIVE */
+}
 
-async function loadFromDrive(){
-
-if(API_URL==="PASTE_GOOGLE_SCRIPT_URL_HERE") return
+async function loadDrive(){
 
 try{
 
-let res=await fetch(API_URL)
-let data=await res.json()
+let r=await fetch(API_URL)
+let data=await r.json()
 
 if(Array.isArray(data)){
-
 players=data
 saveLocal()
 render()
+}
+
+}catch{}
 
 }
 
-}catch(e){
-console.log("Drive sync error")
-}
+function backup(){
+
+let blob=new Blob(
+[JSON.stringify(players,null,2)],
+{type:"application/json"}
+)
+
+let a=document.createElement("a")
+
+a.href=URL.createObjectURL(blob)
+
+a.download="ranking-backup.json"
+
+a.click()
 
 }
 
-/* AUTO SYNC */
-
-setInterval(loadFromDrive,10000)
+setInterval(loadDrive,10000)
 
 loadLocal()
 render()
-loadFromDrive()
+loadDrive()
 
 </script>
 
