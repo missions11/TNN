@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
 <meta charset="UTF-8">
 <title>BẢNG XẾP HẠNG</title>
@@ -95,7 +96,7 @@ Tên
 <br><br>
 
 <button class="addBtn" onclick="addPlayer()">➕ Thêm</button>
-<button onclick="saveDrive()">💾 Lưu Drive</button>
+<button onclick="saveDrive()">💾 Lưu</button>
 <button onclick="backup()">📥 Backup JSON</button>
 
 <div id="status"></div>
@@ -110,7 +111,7 @@ Tên
 
 const PASSWORD="111111"
 
-/* DÁN LINK GOOGLE SCRIPT Ở ĐÂY */
+/* DÁN URL GOOGLE SCRIPT */
 
 const API_URL="https://script.google.com/macros/s/AKfycby6UviLXwOXBUCGFlEhEZVSwK4W7h9zEaVG0o4D4yWIapDv3CF4nMp39KOseqI6jePg3w/exec"
 
@@ -127,15 +128,11 @@ players=[]
 }
 
 function saveLocal(){
-
 localStorage.setItem("players",JSON.stringify(players))
-
 }
 
 function calcScore(p){
-
 return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5
-
 }
 
 function icons(p){
@@ -150,16 +147,17 @@ return "🌿".repeat(p.leaf)
 }
 
 function findPlayer(name){
-
 return players.find(p=>p.name.toLowerCase()==name.toLowerCase())
-
 }
 
 function addPlayer(){
 
 let name=document.getElementById("name").value.trim()
 
-if(!name)return
+if(!name){
+alert("Nhập tên")
+return
+}
 
 let data={
 leaf:+leaf.value||0,
@@ -262,7 +260,7 @@ list.innerHTML=html
 
 async function saveDrive(){
 
-let status=document.getElementById("status")
+const status=document.getElementById("status")
 
 status.innerHTML="⏳ Đang lưu..."
 
@@ -274,6 +272,8 @@ body:JSON.stringify(players)
 })
 
 status.innerHTML="✅ Đã lưu Drive"
+
+await loadDrive()
 
 }catch{
 
@@ -288,12 +288,17 @@ async function loadDrive(){
 try{
 
 let r=await fetch(API_URL)
+
 let data=await r.json()
 
 if(Array.isArray(data)){
+
 players=data
+
 saveLocal()
+
 render()
+
 }
 
 }catch{}
