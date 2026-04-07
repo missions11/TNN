@@ -35,10 +35,10 @@ box-shadow:0 8px 20px rgba(0,0,0,0.15);
 margin-bottom:20px;
 }
 
-/* form */
+/* input */
 
 input{
-width:60px;
+width:70px;
 padding:6px;
 border-radius:8px;
 border:1px solid #ddd;
@@ -56,7 +56,7 @@ font-weight:bold;
 .editBtn{background:#f39c12;color:white;}
 .deleteBtn{background:#e74c3c;color:white;}
 
-/* list */
+/* player list */
 
 .player{
 display:flex;
@@ -95,8 +95,6 @@ font-weight:bold;
 .second{background:silver;height:110px;width:110px;}
 .third{background:#cd7f32;height:90px;width:100px;}
 
-canvas{max-height:350px}
-
 /* popup loading */
 
 #notifyBox{
@@ -105,8 +103,6 @@ top:0;
 left:0;
 right:0;
 bottom:0;
-width:100vw;
-height:100vh;
 background:rgba(0,0,0,0.6);
 display:none;
 align-items:center;
@@ -120,7 +116,6 @@ padding:30px 40px;
 border-radius:20px;
 text-align:center;
 font-size:20px;
-box-shadow:0 10px 40px rgba(0,0,0,0.4);
 }
 
 /* edit modal */
@@ -131,8 +126,6 @@ top:0;
 left:0;
 right:0;
 bottom:0;
-width:100vw;
-height:100vh;
 background:rgba(0,0,0,0.55);
 display:none;
 align-items:center;
@@ -146,18 +139,21 @@ padding:30px;
 border-radius:20px;
 width:420px;
 max-width:90%;
-display:flex;
-flex-direction:column;
-gap:10px;
 box-shadow:0 15px 40px rgba(0,0,0,0.35);
 }
 
-.modalBox label{
-font-weight:bold;
-margin-top:5px;
+.editRow{
+display:flex;
+flex-direction:column;
+margin-bottom:10px;
 }
 
-.modalBox input{
+.editRow label{
+font-weight:bold;
+margin-bottom:3px;
+}
+
+.editRow input{
 width:100%;
 padding:8px;
 border-radius:8px;
@@ -169,6 +165,8 @@ display:flex;
 justify-content:space-between;
 margin-top:15px;
 }
+
+canvas{max-height:350px}
 
 </style>
 </head>
@@ -227,31 +225,44 @@ Tên
 
 <h2>✏️ Chỉnh sửa người chơi</h2>
 
+<div class="editRow">
 <label>Tên</label>
 <input id="editName" disabled>
+</div>
 
+<div class="editRow">
 <label>🌿 Lá</label>
 <input type="number" id="editLeaf">
+</div>
 
+<div class="editRow">
 <label>🌸 Hoa</label>
 <input type="number" id="editFlower">
+</div>
 
+<div class="editRow">
 <label>🍇 Quả</label>
 <input type="number" id="editFruit">
+</div>
 
+<div class="editRow">
 <label>🌳 Cây</label>
 <input type="number" id="editTree">
+</div>
 
+<div class="editRow">
 <label>📖 Sách</label>
 <input type="number" id="editBook">
+</div>
 
+<div class="editRow">
 <label>🗺️ Bản đồ</label>
 <input type="number" id="editMap">
+</div>
 
 <div class="modalActions">
 
 <button onclick="saveEdit()" class="addBtn">💾 Lưu</button>
-
 <button onclick="closeEdit()" class="deleteBtn">❌ Huỷ</button>
 
 </div>
@@ -269,16 +280,20 @@ let editIndex=null
 
 const listEl=document.getElementById("list")
 
+const nameInput=document.getElementById("name")
+const leaf=document.getElementById("leaf")
+const flower=document.getElementById("flower")
+const fruit=document.getElementById("fruit")
+const tree=document.getElementById("tree")
+const book=document.getElementById("book")
+const map=document.getElementById("map")
+
 function calcScore(p){
 return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5
 }
 
 function icons(p){
 return "🌿".repeat(p.leaf)+"🌸".repeat(p.flower)+"🍇".repeat(p.fruit)+"🌳".repeat(p.tree)+"📖".repeat(p.book)+"🗺️".repeat(p.map)
-}
-
-function findPlayer(name){
-return players.find(p=>p.name.toLowerCase()==name.toLowerCase())
 }
 
 function showNotify(text){
@@ -288,7 +303,6 @@ let t=document.getElementById("notifyText")
 let cd=document.getElementById("countdown")
 
 box.style.display="flex"
-
 t.innerText=text
 
 let time=10
@@ -364,7 +378,7 @@ book:+book.value,
 map:+map.value
 }
 
-let p=findPlayer(name)
+let p=players.find(x=>x.name.toLowerCase()==name.toLowerCase())
 
 if(p){
 
@@ -477,18 +491,13 @@ html+=`
 <div class="player">
 
 <div class="rank">#${i+1}</div>
-
 <div class="name">${p.name}</div>
-
 <div class="icons">${icons(p)}</div>
-
 <div class="score">${p.score}</div>
 
 <div class="actions">
-
 <button class="editBtn" onclick="editPlayer(${i})">✏️</button>
 <button class="deleteBtn" onclick="deletePlayer(${i})">❌</button>
-
 </div>
 
 </div>
