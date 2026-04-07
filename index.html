@@ -111,8 +111,6 @@ Tên
 
 const PASSWORD="111111"
 
-/* DÁN URL GOOGLE SCRIPT */
-
 const API_URL="https://script.google.com/macros/s/AKfycby6UviLXwOXBUCGFlEhEZVSwK4W7h9zEaVG0o4D4yWIapDv3CF4nMp39KOseqI6jePg3w/exec"
 
 let players=[]
@@ -271,7 +269,7 @@ method:"POST",
 body:JSON.stringify(players)
 })
 
-status.innerHTML="✅ Đã lưu Drive"
+status.innerHTML="✅ Đã lưu Google Drive"
 
 await loadDrive()
 
