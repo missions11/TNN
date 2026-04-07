@@ -1,7 +1,8 @@
 <!DOCTYPE html><html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>BẢNG XẾP HẠNG</title><style>
+<title>BẢNG XẾP HẠNG</title>
+<style>
 body {
   margin: 0;
   font-family: 'Times New Roman', serif;
@@ -55,6 +56,8 @@ button {
 }
 
 .addBtn { background: #4CAF50; color:white; }
+.syncBtn { background:#2196F3; color:white; }
+.exportBtn { background:#9C27B0; color:white; }
 .editBtn { background: orange; }
 .deleteBtn { background: red; color:white; }
 
@@ -84,14 +87,27 @@ button {
   50% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }
-</style></head><body><h1>🏆 BẢNG XẾP HẠNG CÙNG NHAU KÉO TIẾN NTĐ</h1><!-- music --><audio id="bgm" autoplay loop>
+</style>
+</head>
+
+<body>
+
+<h1>🏆 BẢNG XẾP HẠNG CÙNG NHAU KÉO TIẾN NTĐ</h1>
+
+<audio id="bgm" autoplay loop>
   <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3" type="audio/mpeg">
-</audio><!-- stickers --><div class="sticker" style="left:10%">🎉</div>
+</audio>
+
+<div class="sticker" style="left:10%">🎉</div>
 <div class="sticker" style="left:25%">🌟</div>
 <div class="sticker" style="left:40%">🔥</div>
 <div class="sticker" style="left:55%">💖</div>
 <div class="sticker" style="left:70%">🏆</div>
-<div class="sticker" style="left:85%">✨</div><div class="container"><div class="card">
+<div class="sticker" style="left:85%">✨</div>
+
+<div class="container">
+
+<div class="card">
 Tên: <input id="name">
 🌿 <input type="number" id="leaf" value="0">
 🌸 <input type="number" id="flower" value="0">
@@ -99,119 +115,222 @@ Tên: <input id="name">
 🌳 <input type="number" id="tree" value="0">
 📖 <input type="number" id="book" value="0">
 🗺️ <input type="number" id="map" value="0">
+
 <br><br>
+
 <button class="addBtn" onclick="addPlayer()">➕ Thêm / Cộng dồn</button>
-</div><div id="list"></div></div><script>
+<button class="syncBtn" onclick="saveToDrive()">☁ Lưu Drive</button>
+<button class="syncBtn" onclick="loadFromDrive(true)">☁ Load Drive</button>
+<button class="exportBtn" onclick="exportJSON()">📥 Backup</button>
+
+</div>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+const API_URL="https://script.google.com/macros/s/AKfycby6UviLXwOXBUCGFlEhEZVSwK4W7h9zEaVG0o4D4yWIapDv3CF4nMp39KOseqI6jePg3w/exec";
+
 const listEl = document.getElementById("list");
 let players = JSON.parse(localStorage.getItem("players")||"[]");
 let lastTop1 = players.length ? players[0].name : null;
+let lastHash="";
 
-function save(){ localStorage.setItem("players", JSON.stringify(players)); }
+function saveLocal(){
+localStorage.setItem("players",JSON.stringify(players));
+}
 
 function calcScore(p){
-  return p.leaf*1 + p.flower*50 + p.fruit*500 + p.tree*1000 + p.book*20 + p.map*5;
+return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5;
 }
 
 function icons(p){
-  return "🌿".repeat(p.leaf)+"🌸".repeat(p.flower)+"🍇".repeat(p.fruit)+"🌳".repeat(p.tree)+"📖".repeat(p.book)+"🗺️".repeat(p.map);
+return "🌿".repeat(p.leaf)+"🌸".repeat(p.flower)+"🍇".repeat(p.fruit)+"🌳".repeat(p.tree)+"📖".repeat(p.book)+"🗺️".repeat(p.map);
 }
 
 function badge(i){
-  if(i==0) return "👑 Quán quân";
-  if(i==1) return "🥈 Á quân";
-  if(i==2) return "🥉 Top 3";
-  return "💪 Cố gắng";
+if(i==0) return "👑 Quán quân";
+if(i==1) return "🥈 Á quân";
+if(i==2) return "🥉 Top 3";
+return "💪 Cố gắng";
 }
 
 function findPlayer(name){
-  return players.find(p=>p.name.toLowerCase()===name.toLowerCase());
+return players.find(p=>p.name.toLowerCase()===name.toLowerCase());
 }
 
 function addPlayer(){
-  const nameVal = document.getElementById("name").value.trim();
-  if(!nameVal) return;
 
-  const newData = {
-    leaf:+document.getElementById("leaf").value,
-    flower:+document.getElementById("flower").value,
-    fruit:+document.getElementById("fruit").value,
-    tree:+document.getElementById("tree").value,
-    book:+document.getElementById("book").value,
-    map:+document.getElementById("map").value
-  };
+const nameVal=document.getElementById("name").value.trim();
+if(!nameVal) return;
 
-  let existing = findPlayer(nameVal);
+const newData={
+leaf:+document.getElementById("leaf").value,
+flower:+document.getElementById("flower").value,
+fruit:+document.getElementById("fruit").value,
+tree:+document.getElementById("tree").value,
+book:+document.getElementById("book").value,
+map:+document.getElementById("map").value
+};
 
-  if(existing){
-    existing.leaf += newData.leaf;
-    existing.flower += newData.flower;
-    existing.fruit += newData.fruit;
-    existing.tree += newData.tree;
-    existing.book += newData.book;
-    existing.map += newData.map;
-    existing.score = calcScore(existing);
-  } else {
-    let p = {name:nameVal, ...newData};
-    p.score = calcScore(p);
-    players.push(p);
-  }
+let existing=findPlayer(nameVal);
 
-  save(); render();
+if(existing){
+
+existing.leaf+=newData.leaf;
+existing.flower+=newData.flower;
+existing.fruit+=newData.fruit;
+existing.tree+=newData.tree;
+existing.book+=newData.book;
+existing.map+=newData.map;
+
+existing.score=calcScore(existing);
+
+}else{
+
+let p={name:nameVal,...newData};
+p.score=calcScore(p);
+players.push(p);
+
+}
+
+saveLocal();
+render();
+saveToDrive();
+
 }
 
 function editPlayer(index){
-  let p = players[index];
 
-  let v1 = prompt("🌿", p.leaf);
-  let v2 = prompt("🌸", p.flower);
-  let v3 = prompt("🍇", p.fruit);
-  let v4 = prompt("🌳", p.tree);
-  let v5 = prompt("📖", p.book);
-  let v6 = prompt("🗺️", p.map);
+let p=players[index];
 
-  if(v1!==null) p.leaf = +v1;
-  if(v2!==null) p.flower = +v2;
-  if(v3!==null) p.fruit = +v3;
-  if(v4!==null) p.tree = +v4;
-  if(v5!==null) p.book = +v5;
-  if(v6!==null) p.map = +v6;
+let v1=prompt("🌿",p.leaf);
+let v2=prompt("🌸",p.flower);
+let v3=prompt("🍇",p.fruit);
+let v4=prompt("🌳",p.tree);
+let v5=prompt("📖",p.book);
+let v6=prompt("🗺️",p.map);
 
-  p.score = calcScore(p);
-  save(); render();
+if(v1!==null) p.leaf=+v1;
+if(v2!==null) p.flower=+v2;
+if(v3!==null) p.fruit=+v3;
+if(v4!==null) p.tree=+v4;
+if(v5!==null) p.book=+v5;
+if(v6!==null) p.map=+v6;
+
+p.score=calcScore(p);
+
+saveLocal();
+render();
+saveToDrive();
+
 }
 
 function deletePlayer(index){
-  if(confirm("Xoá người chơi này?")){
-    players.splice(index,1);
-    save(); render();
-  }
+
+if(confirm("Xoá người chơi này?")){
+
+players.splice(index,1);
+
+saveLocal();
+render();
+saveToDrive();
+
+}
+
 }
 
 function render(){
-  players.sort((a,b)=>b.score-a.score);
-  let html="";
 
-  players.forEach((p,i)=>{
-    let cls = i==0?"top1":i==1?"top2":i==2?"top3":"";
-    let anim = (i===0 && p.name!==lastTop1) ? "animateTop1" : "";
+players.sort((a,b)=>b.score-a.score);
 
-    html += `
-    <div class="player ${cls} ${anim}">
-      <div class="rank">#${i+1}</div>
-      <div class="name">${p.name} <span class="badge">${badge(i)}</span></div>
-      <div class="icons">${icons(p)}</div>
-      <div class="score">${p.score}</div>
-      <div class="actions">
-        <button class="editBtn" onclick="editPlayer(${i})">✏️</button>
-        <button class="deleteBtn" onclick="deletePlayer(${i})">❌</button>
-      </div>
-    </div>`;
-  });
+let html="";
 
-  listEl.innerHTML = html;
-  lastTop1 = players.length ? players[0].name : null;
+players.forEach((p,i)=>{
+
+let cls=i==0?"top1":i==1?"top2":i==2?"top3":"";
+let anim=(i===0 && p.name!==lastTop1)?"animateTop1":"";
+
+html+=`
+<div class="player ${cls} ${anim}">
+<div class="rank">#${i+1}</div>
+<div class="name">${p.name} <span class="badge">${badge(i)}</span></div>
+<div class="icons">${icons(p)}</div>
+<div class="score">${p.score}</div>
+<div class="actions">
+<button class="editBtn" onclick="editPlayer(${i})">✏️</button>
+<button class="deleteBtn" onclick="deletePlayer(${i})">❌</button>
+</div>
+</div>`;
+
+});
+
+listEl.innerHTML=html;
+lastTop1 = players.length ? players[0].name : null;
+
+}
+
+async function saveToDrive(){
+
+if(!API_URL.includes("http")) return;
+
+await fetch(API_URL,{
+method:"POST",
+body:JSON.stringify(players)
+});
+
+lastHash=JSON.stringify(players);
+
+}
+
+async function loadFromDrive(force=false){
+
+if(!API_URL.includes("http")) return;
+
+let res=await fetch(API_URL);
+let data=await res.json();
+
+if(!data) return;
+
+let hash=JSON.stringify(data);
+
+if(force || hash!==lastHash){
+
+players=data;
+saveLocal();
+render();
+lastHash=hash;
+
+}
+
+}
+
+setInterval(()=>{
+loadFromDrive();
+},10000);
+
+function exportJSON(){
+
+let dataStr=JSON.stringify(players,null,2);
+
+let blob=new Blob([dataStr],{type:"application/json"});
+let url=URL.createObjectURL(blob);
+
+let a=document.createElement("a");
+a.href=url;
+a.download="ranking-backup.json";
+a.click();
+
+URL.revokeObjectURL(url);
+
 }
 
 render();
-</script></body>
+loadFromDrive(true);
+
+</script>
+
+</body>
 </html>
