@@ -4,11 +4,13 @@
 <meta charset="UTF-8">
 <title>BẢNG XẾP HẠNG NTĐ</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 
 body{
 margin:0;
-font-family:"Times New Roman";
+font-family:'Segoe UI',sans-serif;
 background:linear-gradient(135deg,#a8edea,#fed6e3);
 }
 
@@ -20,7 +22,7 @@ margin:20px;
 }
 
 .container{
-max-width:1000px;
+max-width:1100px;
 margin:auto;
 padding:20px;
 }
@@ -29,9 +31,11 @@ padding:20px;
 background:white;
 padding:15px;
 border-radius:20px;
-box-shadow:0 5px 15px rgba(0,0,0,0.2);
+box-shadow:0 8px 20px rgba(0,0,0,0.15);
 margin-bottom:20px;
 }
+
+/* form */
 
 input{
 width:60px;
@@ -42,47 +46,79 @@ border:1px solid #ddd;
 
 button{
 padding:8px 12px;
-border-radius:8px;
+border-radius:10px;
 border:none;
 cursor:pointer;
+font-weight:bold;
 }
 
-.addBtn{background:#4CAF50;color:white}
-.editBtn{background:orange}
-.deleteBtn{background:red;color:white}
+.addBtn{
+background:#2ecc71;
+color:white;
+}
+
+.editBtn{
+background:#f39c12;
+color:white;
+}
+
+.deleteBtn{
+background:#e74c3c;
+color:white;
+}
+
+/* podium */
+
+.podium{
+display:flex;
+justify-content:center;
+align-items:flex-end;
+gap:20px;
+margin-bottom:30px;
+}
+
+.podium div{
+text-align:center;
+padding:10px;
+border-radius:15px;
+color:white;
+font-weight:bold;
+}
+
+.first{
+background:gold;
+height:140px;
+width:120px;
+}
+
+.second{
+background:silver;
+height:110px;
+width:110px;
+}
+
+.third{
+background:#cd7f32;
+height:90px;
+width:100px;
+}
+
+/* list */
 
 .player{
 display:flex;
 align-items:center;
 padding:12px;
 margin-bottom:10px;
-border-radius:15px;
-background:#f9f9f9;
+border-radius:12px;
+background:#f7f7f7;
 }
 
-.rank{width:50px;font-weight:bold}
+.rank{width:40px;font-weight:bold}
 .name{flex:1}
 .icons{flex:2}
-.score{width:100px;text-align:right;font-weight:bold}
-.actions{width:120px;text-align:right}
-
-.top1{
-background:linear-gradient(45deg,gold,orange);
-box-shadow:0 0 20px gold;
-}
-
-.top2{
-background:linear-gradient(45deg,silver,#ddd);
-}
-
-.top3{
-background:linear-gradient(45deg,#cd7f32,#e0a96d);
-}
-
-.badge{
-margin-left:10px;
-font-size:18px;
-}
+.score{width:80px;text-align:right;font-weight:bold}
+.actions{width:110px;text-align:right}
 
 /* popup */
 
@@ -105,7 +141,12 @@ padding:30px;
 border-radius:20px;
 text-align:center;
 font-size:20px;
-box-shadow:0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* chart */
+
+canvas{
+max-height:350px;
 }
 
 </style>
@@ -113,7 +154,7 @@ box-shadow:0 10px 30px rgba(0,0,0,0.3);
 
 <body>
 
-<h1>🏆 BẢNG XẾP HẠNG CÙNG NHAU KÉO TIẾN NTĐ</h1>
+<h1>🏆 BẢNG XẾP HẠNG NTĐ</h1>
 
 <div class="container">
 
@@ -129,37 +170,43 @@ Tên
 📖 <input type="number" id="book" value="0">
 🗺️ <input type="number" id="map" value="0">
 
-<br><br>
-
 <button class="addBtn" onclick="addPlayer()">💾 Lưu</button>
 
 </div>
+
+<div class="podium" id="podium"></div>
+
+<div class="card">
 
 <div id="list"></div>
 
 </div>
 
+<div class="card">
+
+<h3>📊 Biểu đồ điểm</h3>
+<canvas id="scoreChart"></canvas>
+
+</div>
+
+</div>
 
 <div id="notifyBox">
 <div class="popup">
-
 <div id="notifyText">Đang tải dữ liệu...</div>
-
-<div style="margin-top:10px;font-size:40px">
+<div style="font-size:40px">
 ⏳ <span id="countdown">10</span>
 </div>
-
 </div>
 </div>
-
 
 <script>
 
 const API_URL="https://script.google.com/macros/s/AKfycby6UviLXwOXBUCGFlEhEZVSwK4W7h9zEaVG0o4D4yWIapDv3CF4nMp39KOseqI6jePg3w/exec"
 
 let players=[]
+let scoreChart=null
 let driveReady=false
-let saving=false
 
 const listEl=document.getElementById("list")
 
@@ -168,39 +215,25 @@ return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5
 }
 
 function icons(p){
-return "🌿".repeat(p.leaf)
-+"🌸".repeat(p.flower)
-+"🍇".repeat(p.fruit)
-+"🌳".repeat(p.tree)
-+"📖".repeat(p.book)
-+"🗺️".repeat(p.map)
-}
-
-function badge(i){
-if(i==0)return"👑 Quán quân"
-if(i==1)return"🥈 Á quân"
-if(i==2)return"🥉 Top 3"
-return"💪"
+return "🌿".repeat(p.leaf)+"🌸".repeat(p.flower)+"🍇".repeat(p.fruit)+"🌳".repeat(p.tree)+"📖".repeat(p.book)+"🗺️".repeat(p.map)
 }
 
 function findPlayer(name){
 return players.find(p=>p.name.toLowerCase()==name.toLowerCase())
 }
 
-/* popup */
+function showNotify(text){
 
-function showNotify(message){
+let box=document.getElementById("notifyBox")
+let t=document.getElementById("notifyText")
+let cd=document.getElementById("countdown")
 
-const box=document.getElementById("notifyBox")
-const text=document.getElementById("notifyText")
-const cd=document.getElementById("countdown")
+box.style.display="flex"
 
-text.innerText=message
+t.innerText=text
 
 let time=10
 cd.innerText=time
-
-box.style.display="flex"
 
 let timer=setInterval(()=>{
 
@@ -208,106 +241,56 @@ time--
 cd.innerText=time
 
 if(time<=0){
-
 clearInterval(timer)
 box.style.display="none"
-
 }
 
 },1000)
 
 }
 
-function hideNotify(){
-document.getElementById("notifyBox").style.display="none"
-}
-
-/* load drive */
-
 async function loadDrive(){
 
 try{
 
-const res=await fetch(API_URL)
-const data=await res.json()
+let res=await fetch(API_URL)
+let data=await res.json()
 
 if(Array.isArray(data)){
 
 players=data
-
-localStorage.setItem("backupPlayers",JSON.stringify(players))
-
-driveReady=true
-
 render()
-
-hideNotify()
 
 }
 
 }catch(e){
 
-let backup=localStorage.getItem("backupPlayers")
-
-if(backup){
-
-players=JSON.parse(backup)
-render()
-
-hideNotify()
+console.log("Drive lỗi")
 
 }
 
 }
-
-}
-
-/* save drive */
 
 async function saveDrive(){
 
-if(!driveReady)return
-if(players.length==0)return
-if(saving)return
-
-saving=true
-
 showNotify("Đang lưu dữ liệu lên Drive...")
-
-try{
 
 await fetch(API_URL,{
 method:"POST",
 body:JSON.stringify(players)
 })
 
-setTimeout(async()=>{
-
-await loadDrive()
-
-showNotify("Dữ liệu đã cập nhật!")
-
-},10000)
-
-}catch(e){
-
-alert("Lỗi lưu dữ liệu")
+setTimeout(loadDrive,3000)
 
 }
-
-saving=false
-
-}
-
-/* add */
 
 function addPlayer(){
 
-const name=document.getElementById("name").value.trim()
+let name=nameInput.value.trim()
 
-if(!name)return
+if(!name) return
 
-const newData={
+let data={
 leaf:+leaf.value,
 flower:+flower.value,
 fruit:+fruit.value,
@@ -320,16 +303,16 @@ let p=findPlayer(name)
 
 if(p){
 
-p.leaf+=newData.leaf
-p.flower+=newData.flower
-p.fruit+=newData.fruit
-p.tree+=newData.tree
-p.book+=newData.book
-p.map+=newData.map
+p.leaf+=data.leaf
+p.flower+=data.flower
+p.fruit+=data.fruit
+p.tree+=data.tree
+p.book+=data.book
+p.map+=data.map
 
 }else{
 
-p={name,...newData}
+p={name,...data}
 players.push(p)
 
 }
@@ -341,45 +324,26 @@ saveDrive()
 
 }
 
-/* edit */
-
 function editPlayer(i){
 
 let p=players[i]
 
-let v1=prompt("🌿",p.leaf)
-let v2=prompt("🌸",p.flower)
-let v3=prompt("🍇",p.fruit)
-let v4=prompt("🌳",p.tree)
-let v5=prompt("📖",p.book)
-let v6=prompt("🗺️",p.map)
+let v=prompt("Điểm mới",p.score)
 
-if(v1!==null)p.leaf=+v1
-if(v2!==null)p.flower=+v2
-if(v3!==null)p.fruit=+v3
-if(v4!==null)p.tree=+v4
-if(v5!==null)p.book=+v5
-if(v6!==null)p.map=+v6
-
-p.score=calcScore(p)
+if(v!==null){
+p.score=+v
+}
 
 render()
 saveDrive()
 
 }
 
-/* delete */
-
 function deletePlayer(i){
 
-let pass=prompt("Nhập password xoá")
+let pass=prompt("Password xoá")
 
-if(pass!="111111"){
-
-alert("Sai password")
-return
-
-}
+if(pass!="111111") return
 
 players.splice(i,1)
 
@@ -388,28 +352,41 @@ saveDrive()
 
 }
 
-/* render */
-
 function render(){
 
 players.sort((a,b)=>b.score-a.score)
+
+drawPodium()
+drawList()
+drawChart()
+
+}
+
+function drawPodium(){
+
+let p=document.getElementById("podium")
+
+p.innerHTML=""
+
+if(players[1]) p.innerHTML+=`<div class="second">🥈<br>${players[1].name}</div>`
+if(players[0]) p.innerHTML+=`<div class="first">👑<br>${players[0].name}</div>`
+if(players[2]) p.innerHTML+=`<div class="third">🥉<br>${players[2].name}</div>`
+
+}
+
+function drawList(){
 
 let html=""
 
 players.forEach((p,i)=>{
 
-let cls=i==0?"top1":i==1?"top2":i==2?"top3":""
-
 html+=`
 
-<div class="player ${cls}">
+<div class="player">
 
 <div class="rank">#${i+1}</div>
 
-<div class="name">
-${p.name}
-<span class="badge">${badge(i)}</span>
-</div>
+<div class="name">${p.name}</div>
 
 <div class="icons">${icons(p)}</div>
 
@@ -432,9 +409,38 @@ listEl.innerHTML=html
 
 }
 
-/* start */
+function drawChart(){
+
+let ctx=document.getElementById("scoreChart")
+
+let labels=players.map(p=>p.name)
+let scores=players.map(p=>p.score)
+
+if(scoreChart) scoreChart.destroy()
+
+scoreChart=new Chart(ctx,{
+
+type:'bar',
+
+data:{
+labels:labels,
+datasets:[{
+label:'Điểm',
+data:scores
+}]
+},
+
+options:{
+responsive:true,
+plugins:{legend:{display:false}}
+}
+
+})
+
+}
 
 showNotify("Đang tải dữ liệu...")
+
 loadDrive()
 
 setInterval(loadDrive,5000)
