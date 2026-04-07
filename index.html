@@ -18,19 +18,6 @@ text-align:center;
 padding:20px;
 font-size:40px;
 color:#ff2e63;
-letter-spacing:2px;
-}
-
-.sticker{
-position:fixed;
-font-size:24px;
-opacity:0.3;
-animation:float 10s linear infinite;
-}
-
-@keyframes float{
-from{transform:translateY(100vh);}
-to{transform:translateY(-10vh);}
 }
 
 .container{
@@ -81,48 +68,17 @@ background:#f9f9f9;
 .icons{flex:2;}
 .score{width:80px;text-align:right;font-weight:bold;}
 .actions{width:120px;text-align:right;}
-.badge{margin-left:10px;font-size:18px;}
 
-.top1{
-background:linear-gradient(45deg,gold,orange);
-box-shadow:0 0 20px gold;
-}
-
-.top2{
-background:linear-gradient(45deg,silver,#ddd);
-}
-
-.top3{
-background:linear-gradient(45deg,#cd7f32,#e0a96d);
-}
-
-.animateTop1{
-animation:bounce 0.6s ease;
-}
-
-@keyframes bounce{
-0%{transform:scale(1);}
-50%{transform:scale(1.1);}
-100%{transform:scale(1);}
-}
+.top1{background:linear-gradient(45deg,gold,orange);}
+.top2{background:linear-gradient(45deg,silver,#ddd);}
+.top3{background:linear-gradient(45deg,#cd7f32,#e0a96d);}
 
 </style>
 </head>
 
 <body>
 
-<h1>🏆 BẢNG XẾP HẠNG CÙNG NHAU KÉO TIẾN NTĐ</h1>
-
-<audio autoplay loop>
-<source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3">
-</audio>
-
-<div class="sticker" style="left:10%">🎉</div>
-<div class="sticker" style="left:25%">🌟</div>
-<div class="sticker" style="left:40%">🔥</div>
-<div class="sticker" style="left:55%">💖</div>
-<div class="sticker" style="left:70%">🏆</div>
-<div class="sticker" style="left:85%">✨</div>
+<h1>🏆 BẢNG XẾP HẠNG</h1>
 
 <div class="container">
 
@@ -140,7 +96,7 @@ Tên:
 
 <br><br>
 
-<button class="addBtn" id="addBtn">➕ Thêm / Cộng dồn</button>
+<button class="addBtn" onclick="addPlayer()">➕ Thêm / Cộng dồn</button>
 
 </div>
 
@@ -152,29 +108,28 @@ Tên:
 
 const PASSWORD="111111"
 
-const listEl=document.getElementById("list")
-
-const nameInput=document.getElementById("name")
-const leafInput=document.getElementById("leaf")
-const flowerInput=document.getElementById("flower")
-const fruitInput=document.getElementById("fruit")
-const treeInput=document.getElementById("tree")
-const bookInput=document.getElementById("book")
-const mapInput=document.getElementById("map")
+/* DÁN LINK GOOGLE SCRIPT Ở ĐÂY */
+const API_URL="PASTE_GOOGLE_SCRIPT_URL_HERE"
 
 let players=[]
 let lastTop1=null
 
+const listEl=document.getElementById("list")
+
+function loadLocal(){
 try{
 players=JSON.parse(localStorage.getItem("players")||"[]")
-}catch(e){
+}catch{
 players=[]
 }
+}
 
-if(players.length) lastTop1=players[0].name
-
-function save(){
+function saveLocal(){
 localStorage.setItem("players",JSON.stringify(players))
+}
+
+function calcScore(p){
+return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5
 }
 
 function num(v){
@@ -182,14 +137,10 @@ v=parseInt(v)
 return isNaN(v)||v<0?0:v
 }
 
-function calcScore(p){
-return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5
-}
-
 function icons(p){
 
 function limit(icon,count){
-count=Math.min(count,20)
+count=Math.min(count,15)
 return icon.repeat(count)
 }
 
@@ -202,27 +153,13 @@ limit("🗺️",p.map)
 
 }
 
-function badge(i){
-
-if(i===0) return "👑 Quán quân"
-if(i===1) return "🥈 Á quân"
-if(i===2) return "🥉 Top 3"
-
-return "💪 Cố gắng"
-
-}
-
 function findPlayer(name){
-
-return players.find(
-p=>p.name.toLowerCase()===name.toLowerCase()
-)
-
+return players.find(p=>p.name.toLowerCase()===name.toLowerCase())
 }
 
 function addPlayer(){
 
-const name=nameInput.value.trim()
+const name=document.getElementById("name").value.trim()
 
 if(!name){
 alert("Nhập tên")
@@ -230,12 +167,12 @@ return
 }
 
 const data={
-leaf:num(leafInput.value),
-flower:num(flowerInput.value),
-fruit:num(fruitInput.value),
-tree:num(treeInput.value),
-book:num(bookInput.value),
-map:num(mapInput.value)
+leaf:num(leaf.value),
+flower:num(flower.value),
+fruit:num(fruit.value),
+tree:num(tree.value),
+book:num(book.value),
+map:num(map.value)
 }
 
 let p=findPlayer(name)
@@ -258,15 +195,9 @@ players.push(p)
 
 p.score=calcScore(p)
 
-save()
+saveLocal()
+saveToDrive()
 render()
-
-leafInput.value=0
-flowerInput.value=0
-fruitInput.value=0
-treeInput.value=0
-bookInput.value=0
-mapInput.value=0
 
 }
 
@@ -290,7 +221,8 @@ if(v6!==null)p.map=num(v6)
 
 p.score=calcScore(p)
 
-save()
+saveLocal()
+saveToDrive()
 render()
 
 }
@@ -304,13 +236,11 @@ alert("Sai mật khẩu")
 return
 }
 
-if(confirm("Xoá người chơi này?")){
-
 players.splice(i,1)
-save()
-render()
 
-}
+saveLocal()
+saveToDrive()
+render()
 
 }
 
@@ -324,17 +254,13 @@ let html=""
 
 players.forEach((p,i)=>{
 
-let cls=i===0?"top1":i===1?"top2":i===2?"top3":""
-let anim=(i===0 && p.name!==lastTop1)?"animateTop1":""
+let cls=i==0?"top1":i==1?"top2":i==2?"top3":""
 
 html+=`
-<div class="player ${cls} ${anim}">
+<div class="player ${cls}">
 <div class="rank">#${i+1}</div>
 
-<div class="name">
-${p.name}
-<span class="badge">${badge(i)}</span>
-</div>
+<div class="name">${p.name}</div>
 
 <div class="icons">${icons(p)}</div>
 
@@ -352,13 +278,53 @@ ${p.name}
 
 listEl.innerHTML=html
 
-if(players.length) lastTop1=players[0].name
+}
+
+/* GOOGLE DRIVE SAVE */
+
+async function saveToDrive(){
+
+if(API_URL==="PASTE_GOOGLE_SCRIPT_URL_HERE") return
+
+await fetch(API_URL,{
+method:"POST",
+body:JSON.stringify(players)
+})
 
 }
 
-document.getElementById("addBtn").onclick=addPlayer
+/* LOAD DRIVE */
 
+async function loadFromDrive(){
+
+if(API_URL==="PASTE_GOOGLE_SCRIPT_URL_HERE") return
+
+try{
+
+let res=await fetch(API_URL)
+let data=await res.json()
+
+if(Array.isArray(data)){
+
+players=data
+saveLocal()
 render()
+
+}
+
+}catch(e){
+console.log("Drive sync error")
+}
+
+}
+
+/* AUTO SYNC */
+
+setInterval(loadFromDrive,10000)
+
+loadLocal()
+render()
+loadFromDrive()
 
 </script>
 
