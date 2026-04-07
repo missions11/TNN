@@ -2,9 +2,10 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>BẢNG XẾP HẠNG NTĐ</title>
+<title>Leaderboard NTĐ Pro</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <style>
 
@@ -29,13 +30,13 @@ padding:20px;
 
 .card{
 background:white;
-padding:15px;
+padding:20px;
 border-radius:20px;
-box-shadow:0 8px 20px rgba(0,0,0,0.15);
+box-shadow:0 10px 25px rgba(0,0,0,0.15);
 margin-bottom:20px;
 }
 
-/* form */
+/* input */
 
 input{
 width:60px;
@@ -45,18 +46,18 @@ border:1px solid #ddd;
 }
 
 button{
-padding:8px 12px;
+padding:8px 14px;
 border-radius:10px;
 border:none;
 cursor:pointer;
 font-weight:bold;
 }
 
-.addBtn{background:#2ecc71;color:white;}
-.editBtn{background:#f39c12;color:white;}
+.addBtn{background:#2ecc71;color:white}
+.editBtn{background:#f39c12;color:white}
 .deleteBtn{background:#e74c3c;color:white}
 
-/* podium */
+/* podium 3D */
 
 .podium{
 display:flex;
@@ -68,29 +69,30 @@ margin-bottom:30px;
 
 .podiumBox{
 text-align:center;
-border-radius:15px;
-padding:10px;
 color:white;
 font-weight:bold;
-box-shadow:0 6px 15px rgba(0,0,0,0.2);
+padding:15px;
+border-radius:15px;
+box-shadow:0 15px 25px rgba(0,0,0,0.3);
+transform:perspective(500px) rotateX(10deg);
 }
 
 .first{
 background:linear-gradient(45deg,gold,orange);
-height:160px;
-width:130px;
+height:170px;
+width:140px;
 font-size:20px;
 }
 
 .second{
 background:linear-gradient(45deg,silver,#bbb);
-height:120px;
+height:130px;
 width:120px;
 }
 
 .third{
 background:linear-gradient(45deg,#cd7f32,#e0a96d);
-height:100px;
+height:110px;
 width:110px;
 }
 
@@ -105,19 +107,15 @@ border-radius:12px;
 background:#f7f7f7;
 }
 
-.player:nth-child(1){background:#fff3cd}
-.player:nth-child(2){background:#e8f4ff}
-.player:nth-child(3){background:#f9ecec}
-
 .rank{width:40px;font-weight:bold}
 .name{flex:1}
 .icons{flex:2}
 .score{width:80px;text-align:right;font-weight:bold}
-.actions{width:110px;text-align:right}
+.actions{width:120px;text-align:right}
 
-/* popup */
+/* popup edit */
 
-#notifyBox{
+#editModal{
 position:fixed;
 top:0;
 left:0;
@@ -130,12 +128,22 @@ justify-content:center;
 z-index:999;
 }
 
-.popup{
+.modalContent{
 background:white;
-padding:30px;
+padding:25px;
 border-radius:20px;
+width:320px;
 text-align:center;
-font-size:20px;
+}
+
+.modalContent input{
+width:70px;
+margin:5px;
+}
+
+.closeBtn{
+background:#ccc;
+margin-top:10px;
 }
 
 canvas{
@@ -147,7 +155,7 @@ max-height:350px;
 
 <body>
 
-<h1>🏆 BẢNG XẾP HẠNG NTĐ</h1>
+<h1>🏆 Leaderboard NTĐ</h1>
 
 <div class="container">
 
@@ -174,20 +182,31 @@ Tên
 </div>
 
 <div class="card">
-
 <h3>📊 Biểu đồ điểm</h3>
 <canvas id="scoreChart"></canvas>
-
 </div>
 
 </div>
 
-<div id="notifyBox">
-<div class="popup">
-<div id="notifyText">Đang tải dữ liệu...</div>
-<div style="font-size:40px">
-⏳ <span id="countdown">10</span>
-</div>
+<!-- EDIT POPUP -->
+
+<div id="editModal">
+<div class="modalContent">
+
+<h3>✏️ Sửa dữ liệu</h3>
+
+🌿 <input type="number" id="e_leaf"><br>
+🌸 <input type="number" id="e_flower"><br>
+🍇 <input type="number" id="e_fruit"><br>
+🌳 <input type="number" id="e_tree"><br>
+📖 <input type="number" id="e_book"><br>
+🗺️ <input type="number" id="e_map"><br>
+
+<br>
+
+<button onclick="saveEdit()" class="addBtn">💾 Lưu</button>
+<button onclick="closeEdit()" class="closeBtn">Đóng</button>
+
 </div>
 </div>
 
@@ -197,16 +216,10 @@ const API_URL="https://script.google.com/macros/s/AKfycby6UviLXwOXBUCGFlEhEZVSwK
 
 let players=[]
 let scoreChart=null
+let editIndex=null
+let lastTop1=null
 
 const listEl=document.getElementById("list")
-
-const nameInput=document.getElementById("name")
-const leaf=document.getElementById("leaf")
-const flower=document.getElementById("flower")
-const fruit=document.getElementById("fruit")
-const tree=document.getElementById("tree")
-const book=document.getElementById("book")
-const map=document.getElementById("map")
 
 function calcScore(p){
 return p.leaf*1+p.flower*50+p.fruit*500+p.tree*1000+p.book*20+p.map*5
@@ -220,48 +233,17 @@ function findPlayer(name){
 return players.find(p=>p.name.toLowerCase()==name.toLowerCase())
 }
 
-function showNotify(text){
-
-let box=document.getElementById("notifyBox")
-let t=document.getElementById("notifyText")
-let cd=document.getElementById("countdown")
-
-box.style.display="flex"
-t.innerText=text
-
-let time=10
-cd.innerText=time
-
-let timer=setInterval(()=>{
-
-time--
-cd.innerText=time
-
-if(time<=0){
-clearInterval(timer)
-box.style.display="none"
-}
-
-},1000)
-
-}
-
 async function loadDrive(){
-
-try{
 
 let res=await fetch(API_URL)
 let data=await res.json()
 
 if(Array.isArray(data)){
+
 players=data
 players.forEach(p=>p.score=calcScore(p))
+
 render()
-}
-
-}catch(e){
-
-console.log("Drive lỗi")
 
 }
 
@@ -269,20 +251,16 @@ console.log("Drive lỗi")
 
 async function saveDrive(){
 
-showNotify("Đang lưu dữ liệu...")
-
 await fetch(API_URL,{
 method:"POST",
 body:JSON.stringify(players)
 })
 
-setTimeout(loadDrive,2000)
-
 }
 
 function addPlayer(){
 
-let name=nameInput.value.trim()
+let name=document.getElementById("name").value.trim()
 
 if(!name) return
 
@@ -318,21 +296,45 @@ p.score=calcScore(p)
 render()
 saveDrive()
 
-nameInput.value=""
-
 }
 
-function editPlayer(i){
+function openEdit(i){
+
+editIndex=i
 
 let p=players[i]
 
-let v=prompt("Điểm mới",p.score)
+e_leaf.value=p.leaf
+e_flower.value=p.flower
+e_fruit.value=p.fruit
+e_tree.value=p.tree
+e_book.value=p.book
+e_map.value=p.map
 
-if(v!==null){
-
-p.score=+v
+editModal.style.display="flex"
 
 }
+
+function closeEdit(){
+
+editModal.style.display="none"
+
+}
+
+function saveEdit(){
+
+let p=players[editIndex]
+
+p.leaf=+e_leaf.value
+p.flower=+e_flower.value
+p.fruit=+e_fruit.value
+p.tree=+e_tree.value
+p.book=+e_book.value
+p.map=+e_map.value
+
+p.score=calcScore(p)
+
+closeEdit()
 
 render()
 saveDrive()
@@ -355,6 +357,17 @@ saveDrive()
 function render(){
 
 players.sort((a,b)=>b.score-a.score)
+
+if(lastTop1 && players[0] && players[0].name!=lastTop1){
+
+confetti({
+particleCount:150,
+spread:100
+})
+
+}
+
+lastTop1=players[0]?.name
 
 drawPodium()
 drawList()
@@ -399,7 +412,7 @@ html+=`
 
 <div class="actions">
 
-<button class="editBtn" onclick="editPlayer(${i})">✏️</button>
+<button class="editBtn" onclick="openEdit(${i})">✏️</button>
 <button class="deleteBtn" onclick="deletePlayer(${i})">❌</button>
 
 </div>
@@ -424,9 +437,7 @@ let scores=players.map(p=>p.score)
 if(scoreChart) scoreChart.destroy()
 
 scoreChart=new Chart(ctx,{
-
 type:'bar',
-
 data:{
 labels:labels,
 datasets:[{
@@ -434,17 +445,13 @@ label:'Điểm',
 data:scores
 }]
 },
-
 options:{
 responsive:true,
 plugins:{legend:{display:false}}
 }
-
 })
 
 }
-
-showNotify("Đang tải dữ liệu...")
 
 loadDrive()
 
