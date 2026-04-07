@@ -119,7 +119,8 @@ Tên
 const API_URL="https://script.google.com/macros/s/AKfycby6UviLXwOXBUCGFlEhEZVSwK4W7h9zEaVG0o4D4yWIapDv3CF4nMp39KOseqI6jePg3w/exec"
 
 let players=[]
-let loading=false
+let driveReady=false
+let saving=false
 
 const listEl=document.getElementById("list")
 
@@ -149,18 +150,18 @@ return players.find(p=>p.name.toLowerCase()==name.toLowerCase())
 
 async function loadDrive(){
 
-if(loading)return
-
-loading=true
-
 try{
 
 const res=await fetch(API_URL)
 const data=await res.json()
 
-if(Array.isArray(data)&&data.length>0){
+if(Array.isArray(data)){
 
 players=data
+
+localStorage.setItem("backupPlayers",JSON.stringify(players))
+
+driveReady=true
 
 render()
 
@@ -168,15 +169,30 @@ render()
 
 }catch(e){
 
-console.log("Drive load lỗi")
+console.log("Drive lỗi → dùng backup")
+
+let backup=localStorage.getItem("backupPlayers")
+
+if(backup){
+
+players=JSON.parse(backup)
+render()
 
 }
 
-loading=false
+}
 
 }
 
 async function saveDrive(){
+
+if(!driveReady) return
+
+if(players.length==0) return
+
+if(saving) return
+
+saving=true
 
 try{
 
@@ -185,11 +201,15 @@ method:"POST",
 body:JSON.stringify(players)
 })
 
+localStorage.setItem("backupPlayers",JSON.stringify(players))
+
 }catch(e){
 
 console.log("Save lỗi")
 
 }
+
+saving=false
 
 }
 
@@ -222,7 +242,6 @@ p.map+=newData.map
 }else{
 
 p={name,...newData}
-
 players.push(p)
 
 }
@@ -298,11 +317,8 @@ html+=`
 <div class="rank">#${i+1}</div>
 
 <div class="name">
-
 ${p.name}
-
 <span class="badge">${badge(i)}</span>
-
 </div>
 
 <div class="icons">${icons(p)}</div>
@@ -312,7 +328,6 @@ ${p.name}
 <div class="actions">
 
 <button class="editBtn" onclick="editPlayer(${i})">✏️</button>
-
 <button class="deleteBtn" onclick="deletePlayer(${i})">❌</button>
 
 </div>
