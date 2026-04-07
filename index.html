@@ -97,7 +97,7 @@ font-weight:bold;
 
 canvas{max-height:350px}
 
-/* POPUP LOADING FIX */
+/* popup loading */
 
 #notifyBox{
 position:fixed;
@@ -105,96 +105,69 @@ top:0;
 left:0;
 right:0;
 bottom:0;
-
 width:100vw;
 height:100vh;
-
 background:rgba(0,0,0,0.6);
-
 display:none;
 align-items:center;
 justify-content:center;
-
 z-index:9999;
 }
 
 .popup{
-
 background:white;
-
 padding:30px 40px;
-
 border-radius:20px;
-
 text-align:center;
-
 font-size:20px;
-
 box-shadow:0 10px 40px rgba(0,0,0,0.4);
-
-animation:popupFade .25s ease;
-
 }
 
-/* EDIT MODAL */
+/* edit modal */
 
 .modal{
-
 position:fixed;
 top:0;
 left:0;
 right:0;
 bottom:0;
-
 width:100vw;
 height:100vh;
-
 background:rgba(0,0,0,0.55);
-
 display:none;
 align-items:center;
 justify-content:center;
-
 z-index:10000;
-
 }
 
 .modalBox{
-
 background:white;
-
 padding:30px;
-
 border-radius:20px;
-
 width:420px;
 max-width:90%;
-
-box-shadow:0 15px 40px rgba(0,0,0,0.35);
-
-animation:popupFade .25s ease;
-
-}
-
-.formRow{
-margin:10px 0;
 display:flex;
+flex-direction:column;
 gap:10px;
-align-items:center;
+box-shadow:0 15px 40px rgba(0,0,0,0.35);
 }
 
-@keyframes popupFade{
-
-from{
-transform:scale(.85);
-opacity:0;
+.modalBox label{
+font-weight:bold;
+margin-top:5px;
 }
 
-to{
-transform:scale(1);
-opacity:1;
+.modalBox input{
+width:100%;
+padding:8px;
+border-radius:8px;
+border:1px solid #ddd;
 }
 
+.modalActions{
+display:flex;
+justify-content:space-between;
+margin-top:15px;
 }
 
 </style>
@@ -235,7 +208,7 @@ Tên
 
 </div>
 
-<!-- loading popup -->
+<!-- popup loading -->
 
 <div id="notifyBox">
 <div class="popup">
@@ -246,28 +219,36 @@ Tên
 </div>
 </div>
 
-<!-- edit popup -->
+<!-- popup edit -->
 
 <div id="editModal" class="modal">
+
 <div class="modalBox">
 
 <h2>✏️ Chỉnh sửa người chơi</h2>
 
-<div class="formRow">
-Tên
+<label>Tên</label>
 <input id="editName" disabled>
-</div>
 
-<div class="formRow">
-🌿 <input type="number" id="editLeaf">
-🌸 <input type="number" id="editFlower">
-🍇 <input type="number" id="editFruit">
-🌳 <input type="number" id="editTree">
-📖 <input type="number" id="editBook">
-🗺️ <input type="number" id="editMap">
-</div>
+<label>🌿 Lá</label>
+<input type="number" id="editLeaf">
 
-<div style="margin-top:20px">
+<label>🌸 Hoa</label>
+<input type="number" id="editFlower">
+
+<label>🍇 Quả</label>
+<input type="number" id="editFruit">
+
+<label>🌳 Cây</label>
+<input type="number" id="editTree">
+
+<label>📖 Sách</label>
+<input type="number" id="editBook">
+
+<label>🗺️ Bản đồ</label>
+<input type="number" id="editMap">
+
+<div class="modalActions">
 
 <button onclick="saveEdit()" class="addBtn">💾 Lưu</button>
 
@@ -335,13 +316,9 @@ let res=await fetch(API_URL)
 let data=await res.json()
 
 if(Array.isArray(data)){
-
 players=data
-
 players.forEach(p=>p.score=calcScore(p))
-
 render()
-
 }
 
 }catch(e){
@@ -349,11 +326,8 @@ render()
 let backup=localStorage.getItem("leaderboardBackup")
 
 if(backup){
-
 players=JSON.parse(backup)
-
 render()
-
 }
 
 }
