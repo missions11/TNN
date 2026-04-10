@@ -89,6 +89,8 @@ padding:10px;
 border-radius:15px;
 color:white;
 font-weight:bold;
+  display: flex;
+  flex-direction: column;
 }
 
 .first{background:gold;height:140px;width:120px;}
@@ -474,9 +476,29 @@ let p=document.getElementById("podium")
 
 p.innerHTML=""
 
-if(players[1]) p.innerHTML+=`<div class="second">🥈<br>${players[1].name}</div>`
-if(players[0]) p.innerHTML+=`<div class="first">👑<br>${players[0].name}</div>`
-if(players[2]) p.innerHTML+=`<div class="third">🥉<br>${players[2].name}</div>`
+if(players[1]) p.innerHTML+=`<div class="second">🥈<br>${players[1].name}
+
+<div style="
+    margin-top: 2em;
+    background: brown;
+	    margin-top: auto;
+">Á Quân</div></div>   `
+
+if(players[0]) p.innerHTML+=`<div class="first">👑<br>${players[0].name} 
+
+<div style="
+    margin-top: 2em;
+    background: brown;    margin-top: auto;
+
+">Quán Quân</div></div> </div> `
+
+if(players[2]) p.innerHTML+=`<div class="third">🥉<br>${players[2].name}
+
+<div style="
+    margin-top: 2em;
+    background: brown;    margin-top: auto;
+
+">Top 3</div> `
 
 }
 
